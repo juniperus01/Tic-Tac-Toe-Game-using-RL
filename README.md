@@ -1,7 +1,7 @@
-# Tic-Tac-Toe-Game-using-RL
+# Undefeatable Tic Tac Toe game
 
 ## Objective 
-Training a tic tac toe game with reinforcement learning to improve the AI’s success rate with experience.
+Training a tic tac toe game with Reinforcement learning to improve the AI’s success rate with experience.
 
 ## Introduction 
 Reinforcement learning (RL) is an area of machine learning concerned with how software agents ought to take actions in an environment in order to maximize the notion of cumulative reward. By exploring its environment and exploiting the most rewarding steps, it learns to choose the best action at each stage.
