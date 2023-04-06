@@ -11,6 +11,85 @@ screen = pygame.display.set_mode( (WIDTH, HEIGHT) )
 pygame.display.set_caption( "TIC TAC TOE AI" )
 screen.fill( BG_COLOR )
 
+
+class StartMenu:
+    def __init__(self):
+        self.title_font = pygame.font.SysFont('comic sans MS', 60, bold= True)
+        self.menu_font = pygame.font.SysFont('comic sans MS', 30)
+        self.title_text = self.title_font.render("TIC TAC TOE AI", True, CIRCLE_COLOR)
+        self.play_text = self.menu_font.render("PLAY", True, CIRCLE_COLOR)
+        self.instructions_text = self.menu_font.render("INSTRUCTIONS", True, CIRCLE_COLOR)
+        self.title_rect = self.title_text.get_rect(center=(WIDTH//2, HEIGHT//4))
+        self.play_rect = self.play_text.get_rect(center=(WIDTH//2, HEIGHT//2))
+        self.instructions_rect = self.instructions_text.get_rect(center=(WIDTH//2, HEIGHT//1.5))
+
+    def draw(self):
+        screen.fill(BG_COLOR)
+        screen.blit(self.title_text, self.title_rect)
+        pygame.draw.rect(screen, BG_COLOR, self.play_rect, 2)
+        pygame.draw.rect(screen, BG_COLOR, self.instructions_rect, 2)
+        screen.blit(self.play_text, self.play_rect)
+        screen.blit(self.instructions_text, self.instructions_rect)
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if self.play_rect.collidepoint(pos):
+                    return "PLAY"
+                elif self.instructions_rect.collidepoint(pos):
+                    return "INSTRUCTIONS"
+
+class InstructionsMenu:
+    def __init__(self, screen):
+        self.font = pygame.font.SysFont('helvetica', 20)
+        self.exitfont = pygame.font.SysFont('comic sans MS', 30, bold= True)
+        self.screen = screen
+        self.width = self.screen.get_width()
+        self.height = self.screen.get_height()
+        self.bg_color = BG_COLOR
+        self.text_color = (255, 255, 255)
+        self.exit_text = self.exitfont.render("EXIT", True, CROSS_COLOR)
+        self.exit_rect = self.exit_text.get_rect(center=(self.width // 2, (self.height // 4) + 300))
+
+        self.display()
+
+        
+    def display(self):
+        self.screen.fill(self.bg_color)
+        instructions = [
+            "INSTRUCTIONS",
+            "\n",
+            "Press 'r' to Restart ",
+            "There are 2 game modes:",
+            "   1. Player v/s Player",
+            " 2. Player v/s AI",
+            "Press 'g' to change the game mode",
+            "Press '0' to play at Level 0 (Random AI)",
+            "Press '1' to play at Level 1 (MinMax AI)", 
+        ]
+        y = self.height // 4
+        for line in instructions:
+            text = self.font.render(line, True, self.text_color)
+            text_rect = text.get_rect(center=(self.width // 2, y))
+            self.screen.blit(text, text_rect)
+            y += 30
+        self.screen.blit(self.exit_text, self.exit_rect)
+        pygame.display.flip()
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if self.exit_rect.collidepoint(pos):
+                    return True
+
 class Board:
     def __init__(self):
         self.squares = np.zeros( (ROWS, COLS) )
@@ -211,56 +290,73 @@ class Game:
 
 def main():
 
-    # object
-    game = Game()
-    board = game.board
-    ai = game.ai
+    start_menu = StartMenu()
+    instructions_menu = InstructionsMenu(screen)
 
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            
-            if event.type == pygame.KEYDOWN:
-                # g - gamemode
-                if event.key == pygame.K_g:
-                    game.change_gamemode()
-                
-                # r - reset
-                if event.key == pygame.K_r:
-                    game.reset() 
-                    board = game.board
-                    ai = game.ai
+        start_menu.draw()
+        pygame.display.update()
+        menu_choice = start_menu.handle_events()
+        if menu_choice == "INSTRUCTIONS":
+            while True:
+                instructions_menu.display()
+                pygame.display.update()
+                exit_choice = instructions_menu.handle_events()
+                if exit_choice:
+                    break
+        elif menu_choice == "PLAY":
 
-                # 0 - random ai
-                if event.key == pygame.K_0:
-                    ai.level = 0
-                
-                # 1 - unbeatable ai
-                if event.key == pygame.K_1:
-                    ai.level = 1
-            
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                row = event.pos[1] // SQSIZE # x coord
-                col = event.pos[0] // SQSIZE # y coord
+            # object
+            game = Game()
+            board = game.board
+            ai = game.ai
 
-                if board.empty_sqr(row, col) and game.running:
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    
+                    if event.type == pygame.KEYDOWN:
+                        # g - gamemode
+                        if event.key == pygame.K_g:
+                            game.change_gamemode()
+                        
+                        # r - reset
+                        if event.key == pygame.K_r:
+                            game.reset() 
+                            board = game.board
+                            ai = game.ai
+
+                        # 0 - random ai
+                        if event.key == pygame.K_0:
+                            ai.level = 0
+                        
+                        # 1 - unbeatable ai
+                        if event.key == pygame.K_1:
+                            ai.level = 1
+                    
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        row = event.pos[1] // SQSIZE # x coord
+                        col = event.pos[0] // SQSIZE # y coord
+
+                        if board.empty_sqr(row, col) and game.running:
+                            game.make_move(row, col)
+
+                            if game.isover():
+                                game.running = False
+
+                if game.gamemode == 'ai' and game.player == ai.player and game.running:
+                    pygame.display.update()
+                    row, col = ai.eval(board)
                     game.make_move(row, col)
 
                     if game.isover():
                         game.running = False
-
-        if game.gamemode == 'ai' and game.player == ai.player and game.running:
-            pygame.display.update()
-            row, col = ai.eval(board)
-            game.make_move(row, col)
-
-            if game.isover():
-                game.running = False
-        
-        pygame.display.update()  
+                
+                pygame.display.update()  
 
 main()
+
 
 
